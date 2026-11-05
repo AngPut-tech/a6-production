@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AR Drawing Pro Ultimate</title>
+  <style>
+    :root {
+      --primary: #4facfe;
+      --primary-hover: #00f2fe;
+      --danger: #ff4b4b;
+      --active: #ffeb3b;
+      --bg-glass: rgba(20, 20, 20, 0.65);
+      --border-glass: rgba(255, 255, 255, 0.15);
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      touch-action: none;
+    }
+
+    /* Kamera */
+    #camera-feed {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    /* Grid Overlay (Garis Bantu) */
+    #grid-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 2;
+      pointer-events: none;
+      display: none; /* Default mati */
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    /* Gambar Referensi */
+    #overlay-image {
+      position: absolute;
+      top: 50%; left: 50%;
+      /* Transform diatur via JS */
+      transform: translate(-50%, -50%) scale(1) rotate(0deg);
+      max-width: 90vw;
+      max-height: 90vh;
+      z-index: 3;
+      opacity: 0.5;
+      touch-action: none;
+      cursor: grab;
+      filter: drop-shadow(0px 4px 10px rgba(0,0,0,0.5));
+    }
+    
+    /* Tambahan efek Grayscale */
+    #overlay-image.sketch-mode {
+      filter: grayscale(100%) contrast(200%) drop-shadow(0px 4px 10px rgba(0,0,0,0.5));
+    }
+
+    /* Panel Kontrol Glassmorphism */
+    #controls-container {
+      position: absolute;
+      bottom: 15px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      width: 92%;
+      max-width: 400px;
+      display: flex; flex-direction: column;
+      gap: 10px;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .glass-panel {
+      background: var(--bg-glass);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--border-glass);
+      padding: 15px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex; flex-direction: column;
+      gap: 12px;
+      max-height: 80vh;
+      overflow-y: auto;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    .glass-panel.hidden {
+      max-height: 0; opacity: 0; padding: 0 15px; border: none; pointer-events: none;
+    }
+    .glass-panel::-webkit-scrollbar { display: none; }
+
+    /* Controls & Sliders */
+    .control-group { display: flex; flex-direction: column; gap: 5px; }
+    .control-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: #ddd; }
+    
+    input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type="range"]:focus { outline: none; }
+    input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+    input[type="range"]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: #fff; cursor: pointer; -webkit-appearance: none; margin-top: -5px; }
+
+    /* Buttons */
+    input[type="file"] { display: none; }
+    .upload-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #000; font-weight: 700; text-align: center; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 14px;
+    }
+    
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-glass);
+      color: white; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+      display: flex; justify-content: center; align-items: center; gap: 5px; transition: 0.2s;
+    }
+    .action-btn.active {
+      background: rgba(255, 235, 59, 0.2);
+      border-color: var(--active); color: var(--active);
+    }
+    
+    #lock-btn {
+      background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-glass);
+      color: white; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s;
+    }
+    #lock-btn.locked { background: rgba(255, 75, 75, 0.2); border-color: var(--danger); color: var(--danger); }
+
+    #toggle-menu-btn {
+      align-self: center; background: var(--bg-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glass); color: white; border-radius: 30px; padding: 8px 20px; font-size: 12px; font-weight: bold; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <video id="camera-feed" autoplay playsinline></video>
+  <div id="grid-overlay"></div>
+  <img id="overlay-image" src="" alt="" style="display: none;">
+  
+  <div id="controls-container">
+    <div class="glass-panel" id="main-panel">
+      
+      <label class="upload-btn">
+        📷 Pilih Gambar Referensi
+        <input type="file" id="image-upload" accept="image/*">
+      </label>
+      
+      <div class="control-group">
+        <div class="control-header"><span>Transparansi</span><span id="val-opacity">50%</span></div>
+        <input type="range" id="slider-opacity" min="0.1" max="1" step="0.01" value="0.5">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header"><span>Ukuran (Zoom)</span><span id="val-scale">1.0x</span></div>
+        <input type="range" id="slider-scale" min="0.1" max="3" step="0.05" value="1">
+      </div>
+      
+      <div class="control-group">
+        <div class="control-header"><span>Rotasi (Miring)</span><span id="val-rotate">0°</span></div>
+        <input type="range" id="slider-rotate" min="-180" max="180" step="1" value="0">
+      </div>
+
+      <!-- Fitur Tambahan -->
+      <div class="btn-grid">
+        <button class="action-btn" id="btn-flip">🔄 Flip (Kiri/Kanan)</button>
+        <button class="action-btn" id="btn-filter">🎨 Mode Sketsa</button>
+        <button class="action-btn" id="btn-grid">📏 Garis Grid</button>
+        <button class="action-btn" id="btn-torch">🔦 Nyalain Senter</button>
+      </div>
+
+      <button id="lock-btn">🔓 Posisi Terbuka (Bisa Digeser)</button>
+    </div>
+
+    <button id="toggle-menu-btn">⬇ Sembunyikan Menu</button>
+  </div>
+
+  <script>
+    // Elements
+    const video = document.getElementById('camera-feed');
+    const img = document.getElementById('overlay-image');
+    const upload = document.getElementById('image-upload');
+    const gridOverlay = document.getElementById('grid-overlay');
+    
+    // UI Controls
+    const sOpacity = document.getElementById('slider-opacity');
+    const sScale = document.getElementById('slider-scale');
+    const sRotate = document.getElementById('slider-rotate');
+    const vOpacity = document.getElementById('val-opacity');
+    const vScale = document.getElementById('val-scale');
+    const vRotate = document.getElementById('val-rotate');
+    
+    // Buttons
+    const btnFlip = document.getElementById('btn-flip');
+    const btnFilter = document.getElementById('btn-filter');
+    const btnGrid = document.getElementById('btn-grid');
+    const btnTorch = document.getElementById('btn-torch');
+    const btnLock = document.getElementById('lock-btn');
+    const btnMenu = document.getElementById('toggle-menu-btn');
+    const mainPanel = document.getElementById('main-panel');
+
+    // State Variables
+    let state = {
+      opacity: 0.5,
+      scale: 1,
+      rotate: 0,
+      flipX: 1, // 1 normal, -1 mirror
+      x: 0,
+      y: 0,
+      isSketch: false,
+      isGrid: false
+    };
+
+    let isLocked = false;
+    let isTorchOn = false;
+    let videoTrack = null;
+
+    // --- SETUP KAMERA ---
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(stream => { 
+        video.srcObject = stream; 
+        videoTrack = stream.getVideoTracks()[0]; // Simpan track buat kontrol senter
+      })
+      .catch(err => { alert("Gagal akses kamera: " + err); });
+
+    // --- LOAD STATE DARI LOCAL STORAGE (Auto-Save) ---
+    function loadState() {
+      const saved = localStorage.getItem('arDrawingState');
+      if (saved) {
+        state = JSON.parse(saved);
+        // Update UI biar sesuai sama data yang disave
+        sOpacity.value = state.opacity;
+        sScale.value = state.scale;
+        sRotate.value = state.rotate;
+        
+        updateUIValues();
+        applyTransform();
+        applyFilter();
+        applyGrid();
+      }
+    }
+    
+    function saveState() {
+      localStorage.setItem('arDrawingState', JSON.stringify(state));
+    }
+
+    function updateUIValues() {
+      vOpacity.innerText = Math.round(state.opacity * 100) + '%';
+      vScale.innerText = parseFloat(state.scale).toFixed(1) + 'x';
+      vRotate.innerText = state.rotate + '°';
+    }
+
+    function applyTransform() {
+      img.style.opacity = state.opacity;
+      // Kombinasi posisi X, Y, Scale, Flip, dan Rotasi
+      img.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) scale(${state.scale * state.flipX}, ${state.scale}) rotate(${state.rotate}deg)`;
+      saveState();
+    }
+
+    function applyFilter() {
+      if (state.isSketch) {
+        img.classList.add('sketch-mode');
+        btnFilter.classList.add('active');
+      } else {
+        img.classList.remove('sketch-mode');
+        btnFilter.classList.remove('active');
+      }
+      saveState();
+    }
+
+    function applyGrid() {
+      gridOverlay.style.display = state.isGrid ? 'block' : 'none';
+      if (state.isGrid) btnGrid.classList.add('active');
+      else btnGrid.classList.remove('active');
+      saveState();
+    }
+
+    // Panggil saat pertama buka web
+    loadState();
+
+    // --- UPLOAD GAMBAR ---
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+        alert("Tip: Posisi, ukuran, dan rotasi terakhir kamu otomatis diload. Kalo gambarnya beda, tinggal atur ulang lagi aja bro!");
+      }
+    });
+
+    // --- SLIDERS ---
+    sOpacity.addEventListener('input', (e) => { state.opacity = e.target.value; updateUIValues(); applyTransform(); });
+    sScale.addEventListener('input', (e) => { state.scale = e.target.value; updateUIValues(); applyTransform(); });
+    sRotate.addEventListener('input', (e) => { state.rotate = e.target.value; updateUIValues(); applyTransform(); });
+
+    // --- FITUR BARU ---
+    // 1. Flip (Mirror)
+    btnFlip.addEventListener('click', () => {
+      state.flipX *= -1; // Ubah 1 jadi -1 atau sebaliknya
+      btnFlip.classList.toggle('active');
+      applyTransform();
+    });
+
+    // 2. Filter Sketsa
+    btnFilter.addEventListener('click', () => {
+      state.isSketch = !state.isSketch;
+      applyFilter();
+    });
+
+    // 3. Garis Grid
+    btnGrid.addEventListener('click', () => {
+      state.isGrid = !state.isGrid;
+      applyGrid();
+    });
+
+    // 4. Senter (Torch)
+    btnTorch.addEventListener('click', async () => {
+      if (!videoTrack) return alert("Kamera belum siap atau tidak diizinkan.");
+      try {
+        isTorchOn = !isTorchOn;
+        await videoTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+        btnTorch.classList.toggle('active');
+        btnTorch.innerText = isTorchOn ? '🔦 Senter Nyala' : '🔦 Nyalain Senter';
+      } catch (err) {
+        alert("HP / Browser lu ga support nyalain senter lewat web bro.");
+        isTorchOn = false;
+      }
+    });
+
+    // --- LOGIC LOCK & MENU ---
+    btnLock.addEventListener('click', () => {
+      isLocked = !isLocked;
+      if (isLocked) {
+        btnLock.classList.add('locked');
+        btnLock.innerText = '🔒 Posisi Terkunci!';
+        img.style.pointerEvents = 'none';
+      } else {
+        btnLock.classList.remove('locked');
+        btnLock.innerText = '🔓 Posisi Terbuka (Bisa Digeser)';
+        img.style.pointerEvents = 'auto';
+      }
+    });
+
+    let isMenuHidden = false;
+    btnMenu.addEventListener('click', () => {
+      isMenuHidden = !isMenuHidden;
+      if (isMenuHidden) {
+        mainPanel.classList.add('hidden');
+        btnMenu.innerText = '⬆ Tampilkan Menu';
+      } else {
+        mainPanel.classList.remove('hidden');
+        btnMenu.innerText = '⬇ Sembunyikan Menu';
+      }
+    });
+
+    // --- LOGIC DRAG (GESER GAMBAR) ---
+    let isDragging = false;
+    let initialX = 0, initialY = 0;
+
+    img.addEventListener('touchstart', dragStart, {passive: false});
+    img.addEventListener('mousedown', dragStart);
+    document.addEventListener('touchmove', drag, {passive: false});
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchend', dragEnd);
+    document.addEventListener('mouseup', dragEnd);
+
+    function dragStart(e) {
+      if (isLocked) return;
+      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+      
+      initialX = clientX - state.x;
+      initialY = clientY - state.y;
+      
+      if (e.target === img) isDragging = true;
+    }
+
+    function drag(e) {
+      if (isLocked || !isDragging) return;
+      e.preventDefault();
+      
+      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+      state.x = clientX - initialX;
+      state.y = clientY - initialY;
+      applyTransform();
+    }
+
+    function dragEnd() {
+      isDragging = false;
+    }
+  </script>
+</body>
+</html>
