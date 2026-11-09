@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manga Asset - A6 Studio</title>
+  <style>
+    /* Menggunakan variabel dari index (Theme Engine) */
+    :root { --primary: #f08346; --bg-light: #fef8f3; --text-dark: #2d3436; --white-glass: rgba(255, 255, 255, 0.85); --glass-border: rgba(240, 131, 70, 0.15); }
+    [data-theme="dark"] { --primary: #a29bfe; --bg-light: #121212; --text-dark: #f1f2f6; --white-glass: rgba(30, 30, 30, 0.85); --glass-border: rgba(162, 155, 254, 0.15); }
+    [data-theme="blue"] { --primary: #0984e3; --bg-light: #f1f8ff; --glass-border: rgba(9, 132, 227, 0.15); }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #000; margin: 0; }
+    .wrapper { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg-light); color: var(--text-dark); padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .back-btn { text-decoration: none; color: var(--primary); font-weight: bold; font-size: 14px; }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .asset-card { background: var(--white-glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; text-align: center; }
+    .asset-preview { width: 100%; height: 100px; background-color: #fff; background-image: radial-gradient(#000 1px, transparent 0); background-size: 10px 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+    .asset-name { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+    .dl-btn { display: inline-block; background: var(--primary); color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 11px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <a href="index.html" class="back-btn">⬅ Kembali ke Hub</a>
+      <h2 style="margin:0; font-size:18px;">🗂️ Asset DB</h2>
+    </div>
+    <p style="font-size:12px; margin-bottom:20px; color:gray;">Koleksi material screentone & efek. Klik download untuk menyimpan file PNG transparan.</p>
+
+    <div class="grid">
+      <!-- Aset 1 -->
+      <div class="asset-card">
+        <div class="asset-preview" style="background-size: 5px 5px;"></div>
+        <div class="asset-name">Tone Titik Halus</div>
+        <a href="#" class="dl-btn" onclick="alert('Ini akan mengunduh file PNG Tone 1');">Download</a>
+      </div>
+      <!-- Aset 2 -->
+      <div class="asset-card">
+        <div class="asset-preview" style="background-size: 15px 15px;"></div>
+        <div class="asset-name">Tone Titik Lebar</div>
+        <a href="#" class="dl-btn" onclick="alert('Ini akan mengunduh file PNG Tone 2');">Download</a>
+      </div>
+      <!-- Aset 3 -->
+      <div class="asset-card">
+        <div class="asset-preview" style="background-image: repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 10px);"></div>
+        <div class="asset-name">Arsir Diagonal</div>
+        <a href="#" class="dl-btn" onclick="alert('Ini akan mengunduh file PNG Arsir');">Download</a>
+      </div>
+      <!-- Aset 4 -->
+      <div class="asset-card">
+        <div class="asset-preview" style="background: repeating-radial-gradient(circle, #000, #000 1px, transparent 2px, transparent 5px);"></div>
+        <div class="asset-name">Efek Kaget/Aura</div>
+        <a href="#" class="dl-btn" onclick="alert('Ini akan mengunduh file PNG Aura');">Download</a>
+      </div>
+    </div>
+  </div>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('a6-theme') || 'orange');</script>
+</body>
+</html>

@@ -3,362 +3,472 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>A6 Studio - Pro Glass UI</title>
+  <title>A6 Studio - Creative Platform</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
   <style>
-    /* FIX UI GESER: Memastikan semua padding dan border masuk ke dalam hitungan width/height */
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     :root {
-      --primary-orange: #f08346;
-      --glass-bg: rgba(255, 255, 255, 0.15);
-      --glass-border: rgba(255, 255, 255, 0.3);
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      --danger: #ff7675;
-    }
-
-    body, html {
-      margin: 0; padding: 0; 
-      width: 100%; height: 100%; /* Pakai % bukan vw/vh untuk menghindari horizontal scroll */
-      overflow: hidden; background: #000;
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      touch-action: none; color: #fff;
-      animation: fadeIn 0.8s ease-out;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    #camera-feed {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      object-fit: cover; z-index: 1;
-    }
-
-    #grid-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 2; pointer-events: none; display: none;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
-      background-size: 50px 50px;
-    }
-
-    #overlay-image {
-      position: absolute; top: 38%; left: 50%;
-      transform: translate(-50%, -50%) scale(1) rotate(0deg);
-      max-width: 90%; max-height: 75%;
-      z-index: 3; opacity: 0.5; cursor: grab;
-      filter: drop-shadow(0px 8px 20px rgba(0,0,0,0.6));
-      transition: filter 0.3s ease, opacity 0.2s ease;
+      --primary: #f08346; --bg-light: #fef8f3; --text-dark: #2d3436; 
+      --text-gray: #636e72; --white-glass: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(240, 131, 70, 0.15); --shadow-warm: 0 10px 30px rgba(240, 131, 70, 0.15);
+      --grad-1: #f08346; --grad-2: #e17030; --card-bg: #ffffff;
     }
     
-    /* FIX EFEK SKETSA: Balik ke hitam putih kontras tinggi tanpa efek transparan aneh */
-    #overlay-image.sketch-mode {
-      filter: grayscale(100%) contrast(200%) drop-shadow(0px 8px 20px rgba(0,0,0,0.6));
+    [data-theme="dark"] {
+      --primary: #a29bfe; --bg-light: #0f0f13; --text-dark: #f1f2f6; 
+      --text-gray: #a4b0be; --white-glass: rgba(25, 25, 30, 0.85);
+      --glass-border: rgba(162, 155, 254, 0.15); --shadow-warm: 0 10px 30px rgba(0,0,0, 0.6);
+      --grad-1: #a29bfe; --grad-2: #6c5ce7; --card-bg: #1c1c22;
     }
 
-    /* FIX CONTAINER MENU: Lebar dikunci biar ga over ke samping */
-    #controls-container {
-      position: absolute; bottom: 20px; left: 50%;
-      transform: translateX(-50%); z-index: 4;
-      width: 100%; max-width: 400px;
-      padding: 0 20px; /* Padding aman buat mobile */
-      display: flex; flex-direction: column; gap: 12px;
-    }
-
-    .dashboard-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px; box-shadow: var(--glass-shadow);
-      padding: 18px 22px;
-      display: flex; flex-direction: column; gap: 15px;
-      max-height: 50vh; overflow-y: auto; overflow-x: hidden;
-      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.1), opacity 0.4s ease;
-      transform-origin: bottom;
-    }
-    .dashboard-panel.hidden { transform: translateY(120%) scale(0.9); opacity: 0; pointer-events: none; }
+    body, html { width: 100%; min-height: 100vh; background: #000; font-family: 'Segoe UI', Roboto, sans-serif; color: var(--text-dark); overflow-x: hidden; }
+    .hub-wrapper { width: 100%; max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg-light); display: flex; flex-direction: column; position: relative; transition: background 0.3s; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    .bg-shape { position: fixed; top: 0; right: 0; width: 280px; height: 350px; background: linear-gradient(135deg, var(--grad-1), var(--grad-2)); clip-path: polygon(100% 0, 0 0, 100% 100%); z-index: 1; opacity: 0.12; pointer-events: none; }
     
-    .dashboard-panel::-webkit-scrollbar { width: 4px; }
-    .dashboard-panel::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+    .hub-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; background: var(--white-glass); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border); }
+    .logo-container { display: flex; align-items: center; gap: 8px; color: var(--primary); }
+    .logo-text { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-link { background: none; border: none; font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; transition: 0.2s; cursor: pointer; padding: 5px 0; }
+    .nav-link.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
 
-    .app-title {
-      text-align: center; font-size: 18px; font-weight: 800; color: #fff; margin: 0; 
-      text-shadow: 0 2px 10px rgba(0,0,0,0.4); display: flex; justify-content: center; gap: 8px;
-    }
+    .view-section { display: none; padding-bottom: 80px; z-index: 2; position: relative; }
+    .view-section.active { display: flex; flex-direction: column; animation: slideFadeUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    @keyframes slideFadeUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-    .custom-select-wrapper { position: relative; width: 100%; }
-    .custom-select-btn {
-      background: var(--glass-bg); color: #fff; width: 100%; 
-      font-size: 13px; font-weight: 600; padding: 12px; border-radius: 14px;
-      border: 1px solid var(--glass-border); display: flex; justify-content: space-between;
-      cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    }
-    .custom-options {
-      display: none; flex-direction: column; gap: 4px;
-      background: rgba(20, 20, 20, 0.6); border-radius: 14px;
-      border: 1px solid var(--glass-border); margin-top: 8px; padding: 8px;
-    }
-    .custom-options.show { display: flex; }
-    .custom-option-item {
-      padding: 10px; font-size: 13px; font-weight: 600; color: #fff;
-      border-radius: 8px; cursor: pointer; transition: 0.2s;
-    }
-    .custom-option-item:active, .custom-option-item.selected { background: var(--primary-orange); }
+    /* HUB MENU */
+    .hero-banner { margin: 20px; border-radius: 24px; overflow: hidden; background: var(--white-glass); border: 1px solid var(--glass-border); box-shadow: var(--shadow-warm); display: flex; flex-direction: column; }
+    .hero-img-container { width: 100%; height: 160px; background: linear-gradient(135deg, var(--grad-1), var(--grad-2)); display: flex; align-items: center; justify-content: center; position: relative; }
+    .hero-pattern { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 15px 15px; }
+    .hero-logo-box { z-index: 2; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+    .hero-logo-box h1 { font-size: 24px; font-weight: 900; letter-spacing: 2px; margin: 0; }
+    .hero-content { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .hero-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; }
+    .hero-title { font-size: 18px; font-weight: 900; }
+    .hero-desc { font-size: 11px; color: var(--text-gray); line-height: 1.5; }
 
-    .control-group { display: flex; flex-direction: column; gap: 8px; }
-    .control-header { 
-      display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; 
-      color: rgba(255,255,255,0.9); text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    }
-    input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
-    input[type="range"]:focus { outline: none; }
-    input[type="range"]::-webkit-slider-runnable-track { 
-      width: 100%; height: 6px; cursor: pointer; background: rgba(255,255,255,0.2); 
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-    }
-    input[type="range"]::-webkit-slider-thumb { 
-      height: 20px; width: 20px; border-radius: 50%; background: #f08346; 
-      cursor: pointer; -webkit-appearance: none; margin-top: -7px;
-      border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: transform 0.1s;
-    }
-    input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.2); }
+    .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--primary); margin: 10px 20px 15px; display: flex; align-items: center; gap: 8px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
 
-    button, .upload-label {
-      font-family: inherit; font-weight: 700; font-size: 13px;
-      cursor: pointer; padding: 12px; text-align: center; border-radius: 14px;
-      transition: transform 0.15s, background-color 0.2s; border: none;
-    }
-    button:active, .upload-label:active { transform: scale(0.95); }
-    input[type="file"] { display: none; }
+    .menu-grid { display: flex; flex-direction: column; gap: 16px; padding: 0 20px; }
+    .menu-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; text-decoration: none; color: var(--text-dark); display: flex; gap: 14px; box-shadow: var(--shadow-warm); transition: 0.2s; align-items: center; cursor: pointer; }
+    .menu-card:active { transform: scale(0.97); border-color: var(--primary); }
+    .card-thumb { width: 60px; height: 60px; border-radius: 14px; background: rgba(240, 131, 70, 0.1); color: var(--primary); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .card-info { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .card-title { font-size: 14px; font-weight: 850; margin: 0; }
+    .card-desc { font-size: 11px; color: var(--text-gray); margin: 0; line-height: 1.4; }
+
+    /* ASSET DB */
+    .asset-category { font-size: 13px; font-weight: 800; margin: 20px 20px 10px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+    .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+    .asset-item { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 12px; text-align: center; box-shadow: var(--shadow-warm); }
+    .asset-preview { width: 100%; height: 90px; border-radius: 10px; background: #eee; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--glass-border); position: relative; }
+    .asset-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .asset-name { font-size: 11px; font-weight: 800; margin-bottom: 8px; color: var(--text-dark); }
+    .dl-btn { display: inline-block; background: var(--primary); color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 10px; font-weight: bold; text-decoration: none; }
+
+    /* BUBBLE GENERATOR */
+    .bubble-container { margin: 20px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow-warm); }
+    .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+    .form-group label { font-size: 11px; font-weight: 800; color: var(--text-gray); text-transform: uppercase; }
+    .bubble-input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--bg-light); color: var(--text-dark); font-family: sans-serif; resize: none; }
+    .bubble-canvas-wrap { width: 100%; height: 250px; border: 2px dashed var(--glass-border); border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #888; background-image: repeating-linear-gradient(45deg, #aaa 25%, transparent 25%, transparent 75%, #aaa 75%, #aaa), repeating-linear-gradient(45deg, #aaa 25%, #888 25%, #888 75%, #aaa 75%, #aaa); background-position: 0 0, 10px 10px; background-size: 20px 20px; margin-bottom: 15px; overflow: hidden; }
+    #bubble-canvas { max-width: 100%; max-height: 100%; }
+    .btn-generate { width: 100%; background: linear-gradient(135deg, var(--grad-1), var(--grad-2)); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; }
+    .btn-generate:active { transform: scale(0.97); }
+
+    /* MANGA SECTION */
+    .chapter-card { background: var(--card-bg); border: 1px solid var(--glass-border); padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-warm); margin: 0 20px 12px; }
+    .read-btn { background: var(--primary); color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px; }
     
-    .upload-row { display: flex; gap: 10px; width: 100%; }
-    .upload-label { 
-      flex: 1; background: linear-gradient(135deg, #f08346, #e17030); color: #fff; 
-      box-shadow: 0 4px 15px rgba(240, 131, 70, 0.4); display: block;
-    }
-    #btn-delete {
-      background: rgba(255, 118, 117, 0.2); border: 1px solid var(--danger); color: var(--danger);
-      font-size: 16px; padding: 0 16px; display: flex; align-items: center; justify-content: center;
-    }
+    /* === UPGRADE SECTION TENTANG (ABOUT) === */
+    .about-header-box { padding: 30px 20px 20px; text-align: center; }
+    .about-header-box h2 { font-size: 24px; font-weight: 900; margin-bottom: 5px; background: linear-gradient(135deg, var(--grad-1), var(--grad-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .about-header-box p { font-size: 12px; color: var(--text-gray); line-height: 1.6; margin: 0; }
     
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-    .action-btn { 
-      background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid var(--glass-border);
-      display: flex; justify-content: center; align-items: center; gap: 6px; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    }
-    .action-btn.active { background: #f08346; border-color: #f08346; }
+    .team-grid { display: flex; flex-direction: column; gap: 20px; padding: 0 20px; }
     
-    #lock-btn { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid var(--glass-border); font-size: 14px; width: 100%; }
-    #lock-btn.locked { background: rgba(255, 75, 75, 0.8); border-color: transparent; }
+    .member-card { 
+      background: var(--card-bg); border: 1px solid var(--glass-border); 
+      border-radius: 20px; padding: 20px; position: relative; overflow: hidden; 
+      box-shadow: var(--shadow-warm); transition: transform 0.2s;
+    }
+    .member-card:hover { transform: translateY(-3px); }
+    /* Garis atas kartu */
+    .member-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--grad-1), var(--grad-2)); }
+    
+    .member-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .member-avatar { 
+      width: 56px; height: 56px; border-radius: 16px; background: rgba(240,131,70,0.1); 
+      color: var(--primary); display: flex; align-items: center; justify-content: center; 
+      border: 2px solid var(--primary); flex-shrink: 0; font-weight: 900; font-size: 24px;
+    }
+    .member-info h3 { margin: 0 0 4px; font-weight: 900; font-size: 16px; color: var(--text-dark); }
+    .member-role { font-size: 9px; font-weight: 900; color: #fff; background: var(--primary); padding: 4px 10px; border-radius: 10px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .role-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .role-tag { font-size: 9px; font-weight: 800; color: var(--text-dark); background: rgba(0,0,0,0.05); padding: 4px 10px; border-radius: 12px; border: 1px solid var(--glass-border); }
+    [data-theme="dark"] .role-tag { background: rgba(255,255,255,0.05); color: var(--text-gray); }
+    
+    .member-desc { font-size: 11px; line-height: 1.6; color: var(--text-gray); margin: 0; }
 
-    #toggle-menu-btn {
-      align-self: center; background: var(--glass-bg); color: #fff; backdrop-filter: blur(10px); 
-      border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: 50px; 
-      padding: 10px 24px; font-size: 13px; font-weight: 700;
-    }
+    /* SETTING THEME */
+    .side-icons { position: fixed; right: 12px; bottom: 30px; display: flex; flex-direction: column; gap: 8px; background: var(--white-glass); border: 1px solid var(--glass-border); padding: 8px; border-radius: 50px; box-shadow: var(--shadow-warm); z-index: 100; backdrop-filter: blur(10px); }
+    .side-icon { width: 36px; height: 36px; border-radius: 50%; background: transparent; color: var(--text-gray); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+    .side-icon.active { background: var(--primary); color: #fff; }
+    #theme-modal { display: none; position: fixed; bottom: 30px; right: 65px; background: var(--card-bg); padding: 15px; border-radius: 16px; box-shadow: var(--shadow-warm); z-index: 100; border: 1px solid var(--glass-border); min-width: 140px; }
+    #theme-modal.show { display: flex; flex-direction: column; gap: 10px; animation: slideFadeUp 0.2s forwards; }
+    .theme-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
   </style>
 </head>
 <body>
-
-  <video id="camera-feed" autoplay playsinline></video>
-  <div id="grid-overlay"></div>
-  <img id="overlay-image" src="" alt="" style="display: none;">
-  
-  <div id="controls-container">
-    <div class="dashboard-panel" id="main-panel">
-      <h1 class="app-title">✨ A6 Studio</h1>
-      
-      <div class="upload-row">
-        <label class="upload-label">📸 Pilih Gambar<input type="file" id="image-upload" accept="image/*"></label>
-        <button id="btn-delete" title="Hapus Gambar">🗑️</button>
+  <div class="hub-wrapper">
+    <div class="bg-shape"></div>
+    
+    <header class="hub-header">
+      <div class="logo-container">
+        <i data-lucide="pen-tool"></i>
+        <span class="logo-text">A6 STUDIO</span>
       </div>
+      <nav class="nav-links">
+        <button class="nav-link active" data-target="view-hub">Hub</button>
+        <button class="nav-link" data-target="view-asset">Asset</button>
+        <button class="nav-link" data-target="view-manga">Manga</button>
+        <button class="nav-link" data-target="view-about">Tentang</button>
+      </nav>
+    </header>
 
-      <div class="custom-select-wrapper">
-        <div class="custom-select-btn" id="custom-select-btn">
-          <span id="custom-select-text">-- Template Manga --</span> <span>▼</span>
+    <!-- HUB MENU -->
+    <section id="view-hub" class="view-section active">
+      <div class="hero-banner">
+        <div class="hero-img-container">
+          <div class="hero-pattern"></div>
+          <div class="hero-logo-box"><i data-lucide="swords"></i><h1>A6</h1></div>
         </div>
-        <div class="custom-options" id="custom-options">
-          <div class="custom-option-item" data-value="4koma">📚 4-Koma (4 Panel)</div>
-          <div class="custom-option-item" data-value="action">⚔️ Panel Action</div>
-          <div class="custom-option-item" data-value="classic">📖 3 Panel Klasik</div>
-          <div class="custom-option-item" data-value="bubble1">💬 Balon Kata 1</div>
-          <div class="custom-option-item" data-value="bubble2">💢 Balon Kata 2</div>
+        <div class="hero-content">
+          <span class="hero-badge">Creative Platform</span>
+          <h2 class="hero-title">WORKFLOW MANGA SUPER CEPAT.</h2>
+          <p class="hero-desc">Buka imajinasi kamu. Eksekusi lebih ngebut dengan tools buatan A6 Production.</p>
         </div>
       </div>
-      
-      <div class="control-group">
-        <div class="control-header"><span>Transparansi</span><span id="val-opacity">50%</span></div>
-        <input type="range" id="slider-opacity" min="0.1" max="1" step="0.01" value="0.5">
-      </div>
-      <div class="control-group">
-        <div class="control-header"><span>Zoom Size</span><span id="val-scale">1.0x</span></div>
-        <input type="range" id="slider-scale" min="0.1" max="3" step="0.05" value="1">
-      </div>
-      <div class="control-group">
-        <div class="control-header"><span>Rotasi</span><span id="val-rotate">0°</span></div>
-        <input type="range" id="slider-rotate" min="-180" max="180" step="1" value="0">
+
+      <div class="section-title"><i data-lucide="flame" style="width:16px;"></i> TOOLS UTAMA</div>
+      <main class="menu-grid">
+        <a href="ar-drawing.html" class="menu-card">
+          <div class="card-thumb"><i data-lucide="camera"></i></div>
+          <div class="card-info">
+            <h3 class="card-title">AR Drawing</h3>
+            <p class="card-desc">Trace lineart & referensi kamera.</p>
+          </div>
+        </a>
+        
+        <div class="menu-card" onclick="document.querySelector('[data-target=\'view-bubble\']').click()">
+          <div class="card-thumb"><i data-lucide="message-square"></i></div>
+          <div class="card-info">
+            <h3 class="card-title">Bubble Gen</h3>
+            <p class="card-desc">Bikin balon dialog format PNG transparan.</p>
+          </div>
+        </div>
+        
+        <div class="menu-card" onclick="document.querySelector('[data-target=\'view-asset\']').click()">
+          <div class="card-thumb"><i data-lucide="layers"></i></div>
+          <div class="card-info">
+            <h3 class="card-title">Asset DB</h3>
+            <p class="card-desc">Referensi anatomi, pose & screentone.</p>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <!-- ASSET DATABASE -->
+    <section id="view-asset" class="view-section">
+      <div style="padding: 20px; text-align:center;">
+        <h2 style="font-weight:900;">A6 ASSET VAULT</h2>
+        <p style="font-size:12px; color:var(--text-gray);">Bank referensi visual untuk Illustrator & Editor.</p>
       </div>
 
-      <div class="btn-grid">
-        <button class="action-btn" id="btn-flip">🔄 Flip</button>
-        <button class="action-btn" id="btn-filter">🎨 Sketsa</button>
-        <button class="action-btn" id="btn-grid">📏 Grid</button>
-        <button class="action-btn" id="btn-torch">🔦 Senter</button>
+      <div class="asset-category"><i data-lucide="accessibility" style="width:16px;"></i> Anatomi & Proporsi Tubuh</div>
+      <div class="asset-grid">
+        <div class="asset-item">
+          <div class="asset-preview"><img src="https://via.placeholder.com/150/EEEEEE/999999?text=Anatomi+Pria"></div>
+          <div class="asset-name">Proporsi Pria (8 Kepala)</div>
+          <a href="#" class="dl-btn">Simpan Ref</a>
+        </div>
+        <div class="asset-item">
+          <div class="asset-preview"><img src="https://via.placeholder.com/150/EEEEEE/999999?text=Anatomi+Wanita"></div>
+          <div class="asset-name">Proporsi Wanita</div>
+          <a href="#" class="dl-btn">Simpan Ref</a>
+        </div>
       </div>
-      <button id="lock-btn">🔓 Kunci Posisi</button>
+
+      <div class="asset-category"><i data-lucide="person-standing" style="width:16px;"></i> Referensi Pose (Action)</div>
+      <div class="asset-grid">
+        <div class="asset-item">
+          <div class="asset-preview"><img src="https://via.placeholder.com/150/EEEEEE/999999?text=Pose+Pukul"></div>
+          <div class="asset-name">Punch / Pukulan Dinamis</div>
+          <a href="#" class="dl-btn">Simpan Ref</a>
+        </div>
+        <div class="asset-item">
+          <div class="asset-preview"><img src="https://via.placeholder.com/150/EEEEEE/999999?text=Pose+Pedang"></div>
+          <div class="asset-name">Kuda-kuda Pedang</div>
+          <a href="#" class="dl-btn">Simpan Ref</a>
+        </div>
+      </div>
+
+      <div class="asset-category"><i data-lucide="grid" style="width:16px;"></i> Screentone & Efek</div>
+      <div class="asset-grid">
+        <div class="asset-item">
+          <div class="asset-preview" style="background-image: repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 8px);"></div>
+          <div class="asset-name">Arsir Diagonal Hitam</div>
+          <a href="#" class="dl-btn">Download PNG</a>
+        </div>
+        <div class="asset-item">
+          <div class="asset-preview" style="background: radial-gradient(circle, #000 1px, transparent 2px); background-size: 8px 8px;"></div>
+          <div class="asset-name">Screentone Titik 8px</div>
+          <a href="#" class="dl-btn">Download PNG</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GENERATOR BALON KATA -->
+    <section id="view-bubble" class="view-section">
+      <div style="padding: 20px; text-align:center;">
+        <h2 style="font-weight:900;">BUBBLE GEN</h2>
+        <p style="font-size:12px; color:var(--text-gray);">Buat balon dialog transparan tanpa buka aplikasi berat.</p>
+      </div>
+
+      <div class="bubble-container">
+        <div class="form-group">
+          <label>Teks Dialog</label>
+          <textarea id="bubble-text" class="bubble-input" rows="3">Gwa pasti bakal ngalahin lu!!</textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Tipe Balon</label>
+          <select id="bubble-type" class="bubble-input" style="padding:10px;">
+            <option value="normal">Biasa (Oval)</option>
+            <option value="shout">Teriak (Tajam)</option>
+            <option value="box">Kotak Narasi</option>
+          </select>
+        </div>
+
+        <div class="bubble-canvas-wrap">
+          <canvas id="bubble-canvas" width="400" height="400"></canvas>
+        </div>
+
+        <button class="btn-generate" onclick="downloadBubble()">
+          <i data-lucide="download"></i> Download PNG Transparan
+        </button>
+      </div>
+    </section>
+
+    <!-- MANGA RILIS -->
+    <section id="view-manga" class="view-section">
+      <div style="padding: 20px; text-align:center;">
+        <h2 style="font-weight:900;">RILIS MANGA</h2>
+        <p style="font-size:12px; color:var(--text-gray);">Karya orisinal terbaru A6 Production.</p>
+      </div>
+      <div id="manga-list-container"></div>
+    </section>
+
+    <!-- === TENTANG STUDIO (UPGRADE BARU) === -->
+    <section id="view-about" class="view-section">
+      
+      <div class="about-header-box">
+        <h2>A6 PRODUCTION</h2>
+        <p>Studio komik indie beranggotakan dua orang partner. Kami memadukan cerita yang kuat dengan keahlian ilustrasi manual, lalu menyempurnakannya lewat ekosistem digital untuk dirilis ke pembaca.</p>
+      </div>
+
+      <div class="section-title" style="margin-bottom:5px;"><i data-lucide="users" style="width:16px;"></i> FORMASI TIM</div>
+      
+      <div class="team-grid">
+        
+        <!-- CARD TEMAN LU (Pure Illustrator) -->
+        <div class="member-card">
+          <div class="member-header">
+            <div class="member-avatar"><i data-lucide="pen-tool"></i></div>
+            <div class="member-info">
+              <h3>Ade Wiranto</h3>
+              <span class="member-role">Main Illustrator</span>
+            </div>
+          </div>
+          <div class="role-tags">
+            <span class="role-tag">#TraditionalArt</span>
+            <span class="role-tag">#Lineart</span>
+            <span class="role-tag">#CharacterDesign</span>
+            <span class="role-tag">#PanelingManual</span>
+          </div>
+          <p class="member-desc">
+            Ujung tombak visual A6. Sepenuhnya bertanggung jawab merancang karakter dan menggambar lineart utama serta background secara manual di atas kertas.
+          </p>
+        </div>
+
+        <!-- CARD LU (Writer, Publisher, Post-Pro) -->
+        <div class="member-card">
+          <div class="member-header">
+            <div class="member-avatar"><i data-lucide="monitor"></i></div>
+            <div class="member-info">
+              <h3>Yucass / Ucas</h3>
+              <span class="member-role">Writer & Publisher</span>
+            </div>
+          </div>
+          <div class="role-tags">
+            <span class="role-tag">#StoryWriter</span>
+            <span class="role-tag">#DialogScript</span>
+            <span class="role-tag">#DigitalEditor</span>
+            <span class="role-tag">#WebTools</span>
+          </div>
+          <p class="member-desc">
+            Otak di balik alur cerita dan naskah dialog. Bertugas memoles hasil gambar fisik ke digital (screentone, typesetting), mengembangkan tools studio, dan mempublikasikan setiap chapter baru.
+          </p>
+        </div>
+        
+      </div>
+    </section>
+
+    <button class="nav-link" data-target="view-bubble" style="display:none;"></button>
+
+    <!-- THEME SETTINGS -->
+    <div class="side-icons">
+      <button class="side-icon" id="btn-settings"><i data-lucide="settings"></i></button>
     </div>
-    <button id="toggle-menu-btn">⬇ Sembunyikan</button>
+    <div id="theme-modal">
+      <span style="font-size:10px;font-weight:bold;color:var(--text-gray);text-align:center;">GANTI TEMA</span>
+      <button class="theme-btn" style="background:#f08346;" onclick="setTheme('orange')">Orange</button>
+      <button class="theme-btn" style="background:#0984e3;" onclick="setTheme('blue')">Blue</button>
+      <button class="theme-btn" style="background:#6c5ce7;" onclick="setTheme('dark')">Dark</button>
+    </div>
   </div>
 
   <script>
-    // Fitur Layar Awet nyala terus
-    let wakeLock = null;
-    async function keepScreenAwake() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
+    lucide.createIcons();
+
+    const savedTheme = localStorage.getItem('a6-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('btn-settings').addEventListener('click', () => { document.getElementById('theme-modal').classList.toggle('show'); });
+    function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('a6-theme', theme); document.getElementById('theme-modal').classList.remove('show'); }
+
+    // SISTEM TAB SPA
+    const navLinks = document.querySelectorAll('.nav-link, [data-target]');
+    const viewSections = document.querySelectorAll('.view-section');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if(link.classList.contains('nav-link')) {
+          document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+          link.classList.add('active');
         }
-      } catch (err) { console.error('Wake Lock gagal:', err); }
-    }
-    keepScreenAwake(); 
-    document.addEventListener('visibilitychange', () => {
-      if (wakeLock !== null && document.visibilityState === 'visible') keepScreenAwake();
-    });
-
-    const video = document.getElementById('camera-feed');
-    const img = document.getElementById('overlay-image');
-    const upload = document.getElementById('image-upload');
-    const btnDelete = document.getElementById('btn-delete');
-    const gridOverlay = document.getElementById('grid-overlay');
-    const mainPanel = document.getElementById('main-panel');
-    
-    // Setup Custom Dropdown
-    const selectBtn = document.getElementById('custom-select-btn');
-    const selectText = document.getElementById('custom-select-text');
-    const optionsBox = document.getElementById('custom-options');
-    const optionItems = document.querySelectorAll('.custom-option-item');
-
-    selectBtn.addEventListener('click', () => optionsBox.classList.toggle('show'));
-
-    const mangaTemplates = {
-      '4koma': `<svg width="400" height="800" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="380" height="180" fill="none" stroke="black" stroke-width="8"/><rect x="10" y="210" width="380" height="180" fill="none" stroke="black" stroke-width="8"/><rect x="10" y="410" width="380" height="180" fill="none" stroke="black" stroke-width="8"/><rect x="10" y="610" width="380" height="180" fill="none" stroke="black" stroke-width="8"/></svg>`,
-      'action': `<svg width="500" height="700" xmlns="http://www.w3.org/2000/svg"><polygon points="10,10 490,10 490,250 10,400" fill="none" stroke="black" stroke-width="8"/><polygon points="10,420 490,270 490,690 10,690" fill="none" stroke="black" stroke-width="8"/></svg>`,
-      'classic': `<svg width="500" height="700" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="480" height="200" fill="none" stroke="black" stroke-width="8"/><rect x="10" y="230" width="230" height="460" fill="none" stroke="black" stroke-width="8"/><rect x="260" y="230" width="230" height="460" fill="none" stroke="black" stroke-width="8"/></svg>`,
-      'bubble1': `<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><ellipse cx="150" cy="90" rx="140" ry="80" fill="white" stroke="black" stroke-width="8"/><polygon points="100,160 80,195 140,167" fill="white" stroke="black" stroke-width="8"/></svg>`,
-      'bubble2': `<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg"><polygon points="150,10 190,60 270,40 230,100 290,150 230,190 260,260 180,230 150,290 110,230 40,260 80,180 20,150 80,100 30,40 100,70" fill="white" stroke="black" stroke-width="8"/></svg>`
-    };
-
-    optionItems.forEach(item => {
-      item.addEventListener('click', () => {
-        optionItems.forEach(i => i.classList.remove('selected'));
-        item.classList.add('selected');
-        selectText.innerText = item.innerText;
-        optionsBox.classList.remove('show');
-
-        const key = item.getAttribute('data-value');
-        if (key && mangaTemplates[key]) {
-          const svgData = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(mangaTemplates[key]);
-          img.src = svgData;
-          img.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) scale(0) rotate(${state.rotate}deg)`;
-          img.style.display = 'block';
-          setTimeout(() => applyTransform(), 50);
-        }
+        viewSections.forEach(section => section.classList.remove('active'));
+        const targetId = link.getAttribute('data-target');
+        document.getElementById(targetId).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(targetId === 'view-bubble') drawBubble();
       });
     });
 
-    let state = { opacity: 0.5, scale: 1, rotate: 0, flipX: 1, x: 0, y: 0, isSketch: false, isGrid: false };
-    let isLocked = false, isTorchOn = false, videoTrack = null;
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(stream => { video.srcObject = stream; videoTrack = stream.getVideoTracks()[0]; })
-      .catch(err => alert("Kamera error: " + err));
-
-    function applyTransform() {
-      img.style.opacity = state.opacity;
-      img.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) scale(${state.scale * state.flipX}, ${state.scale}) rotate(${state.rotate}deg)`;
-    }
-
-    function resetDropdown() {
-      selectText.innerText = "-- Template Manga --";
-      optionItems.forEach(i => i.classList.remove('selected'));
-    }
-
-    btnDelete.addEventListener('click', () => {
-      img.src = ""; img.style.display = 'none'; upload.value = ""; resetDropdown();
+    // DATABASE MANGA
+    const dbManga = [
+      { judul: "Chapter 2: The Celestial", tanggal: "15 Nov 2026", link: "#" },
+      { judul: "Chapter 1: The Celestial", tanggal: "1 Nov 2026", link: "#" }
+    ];
+    const mangaContainer = document.getElementById('manga-list-container');
+    dbManga.forEach(k => {
+      mangaContainer.innerHTML += `
+        <div class="chapter-card">
+          <div>
+            <h3 class="ch-title">${k.judul}</h3><p class="ch-date"><i data-lucide="calendar" style="width:12px; margin-right:4px;"></i>${k.tanggal}</p>
+          </div>
+          <a href="${k.link}" class="read-btn">BACA</a>
+        </div>`;
     });
 
-    upload.addEventListener('change', (e) => {
-      if (e.target.files[0]) {
-        resetDropdown();
-        img.src = URL.createObjectURL(e.target.files[0]);
-        img.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) scale(0) rotate(${state.rotate}deg)`;
-        img.style.display = 'block';
-        setTimeout(() => applyTransform(), 50);
+    // === ENGINE GENERATOR BALON KATA ===
+    const canvas = document.getElementById('bubble-canvas');
+    const ctx = canvas.getContext('2d');
+    const inputTeks = document.getElementById('bubble-text');
+    const inputTipe = document.getElementById('bubble-type');
+
+    function drawBubble() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const text = inputTeks.value;
+      const type = inputTipe.value;
+      
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 6;
+      ctx.lineJoin = "round";
+
+      ctx.beginPath();
+      
+      if(type === 'normal') {
+        ctx.ellipse(cx, cy - 20, 160, 100, 0, 0, 2 * Math.PI);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 40, cy + 65);
+        ctx.lineTo(cx - 80, cy + 140);
+        ctx.lineTo(cx + 10, cy + 75);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx - 38, cy + 65); ctx.lineTo(cx + 8, cy + 75);
+        ctx.strokeStyle = "white"; ctx.stroke();
+      } 
+      else if(type === 'box') {
+        ctx.rect(cx - 150, cy - 80, 300, 160);
+        ctx.fill(); ctx.stroke();
       }
-    });
+      else if(type === 'shout') {
+        const points = 16;
+        const outerRadius = 170;
+        const innerRadius = 120;
+        for (let i = 0; i < points * 2; i++) {
+          const radius = i % 2 === 0 ? outerRadius : innerRadius;
+          const angle = (i * Math.PI) / points;
+          const x = cx + Math.cos(angle) * radius;
+          const y = cy + Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      }
+      
+      ctx.fillStyle = "black";
+      ctx.font = "bold 24px 'Segoe UI', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      const words = text.split(' ');
+      let line = '';
+      let yOffset = type === 'normal' ? cy - 30 : cy;
+      const lines = [];
 
-    const sOpacity = document.getElementById('slider-opacity');
-    const sScale = document.getElementById('slider-scale');
-    const sRotate = document.getElementById('slider-rotate');
-    sOpacity.addEventListener('input', e => { state.opacity = e.target.value; document.getElementById('val-opacity').innerText = Math.round(state.opacity * 100) + '%'; applyTransform(); });
-    sScale.addEventListener('input', e => { state.scale = e.target.value; document.getElementById('val-scale').innerText = parseFloat(state.scale).toFixed(1) + 'x'; applyTransform(); });
-    sRotate.addEventListener('input', e => { state.rotate = e.target.value; document.getElementById('val-rotate').innerText = state.rotate + '°'; applyTransform(); });
+      for(let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        if(testLine.length > 20 && n > 0) {
+          lines.push(line); line = words[n] + ' ';
+        } else { line = testLine; }
+      }
+      lines.push(line);
 
-    document.getElementById('btn-flip').addEventListener('click', function() { state.flipX *= -1; this.classList.toggle('active'); applyTransform(); });
-    
-    // Teks tombol sketsa dibalikin normal
-    document.getElementById('btn-filter').addEventListener('click', function() { 
-      state.isSketch = !state.isSketch; 
-      if(state.isSketch) { img.classList.add('sketch-mode'); this.classList.add('active'); this.innerText = "🎨 Mode Biasa"; }
-      else { img.classList.remove('sketch-mode'); this.classList.remove('active'); this.innerText = "🎨 Sketsa"; }
-    });
-    
-    document.getElementById('btn-grid').addEventListener('click', function() {
-      state.isGrid = !state.isGrid; gridOverlay.style.display = state.isGrid ? 'block' : 'none'; this.classList.toggle('active');
-    });
-
-    document.getElementById('btn-torch').addEventListener('click', async function() {
-      if (!videoTrack) return;
-      try { isTorchOn = !isTorchOn; await videoTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] }); this.classList.toggle('active'); } 
-      catch (err) { alert("Senter tidak didukung."); isTorchOn = false; }
-    });
-
-    const btnLock = document.getElementById('lock-btn');
-    btnLock.addEventListener('click', () => {
-      isLocked = !isLocked;
-      if (isLocked) { btnLock.classList.add('locked'); btnLock.innerText = '🔒 Posisi Terkunci!'; img.style.pointerEvents = 'none'; } 
-      else { btnLock.classList.remove('locked'); btnLock.innerText = '🔓 Kunci Posisi'; img.style.pointerEvents = 'auto'; }
-    });
-
-    const btnMenu = document.getElementById('toggle-menu-btn');
-    let isMenuHidden = false;
-    btnMenu.addEventListener('click', () => {
-      isMenuHidden = !isMenuHidden;
-      if (isMenuHidden) { mainPanel.classList.add('hidden'); btnMenu.innerText = '⬆ Tampilkan'; } 
-      else { mainPanel.classList.remove('hidden'); btnMenu.innerText = '⬇ Sembunyikan'; }
-    });
-
-    let isDragging = false, initialX = 0, initialY = 0;
-    img.addEventListener('touchstart', dragStart, {passive: false}); img.addEventListener('mousedown', dragStart);
-    document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mousemove', drag);
-    document.addEventListener('touchend', dragEnd); document.addEventListener('mouseup', dragEnd);
-
-    function dragStart(e) {
-      if (isLocked) return;
-      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-      initialX = clientX - state.x; initialY = clientY - state.y;
-      if (e.target === img) { isDragging = true; img.style.transition = 'none'; }
+      const startY = yOffset - ((lines.length - 1) * 15);
+      for(let k = 0; k < lines.length; k++) {
+        ctx.fillText(lines[k], cx, startY + (k * 30));
+      }
     }
-    function drag(e) {
-      if (isLocked || !isDragging) return;
-      e.preventDefault();
-      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-      state.x = clientX - initialX; state.y = clientY - initialY;
-      applyTransform();
+
+    inputTeks.addEventListener('input', drawBubble);
+    inputTipe.addEventListener('change', drawBubble);
+
+    function downloadBubble() {
+      const link = document.createElement('a');
+      link.download = 'a6-bubble.png';
+      link.href = canvas.toDataURL("image/png");
+      link.click();
     }
-    function dragEnd() { isDragging = false; img.style.transition = 'filter 0.3s ease, opacity 0.2s ease, transform 0.2s ease'; }
   </script>
 </body>
 </html>
